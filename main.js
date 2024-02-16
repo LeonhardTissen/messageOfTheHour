@@ -10,6 +10,11 @@ function choice(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Create bannedWords.txt if it doesn't exist
+if (!fs.existsSync('bannedWords.txt')) {
+	fs.writeFileSync('bannedWords.txt', '');
+}
+
 const bannedWords = fs.readFileSync('bannedWords.txt', 'utf8').split('\n');
 
 function addToBannedWordList(word) {
