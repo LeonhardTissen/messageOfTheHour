@@ -41,9 +41,13 @@ client.on("ready", () => {
 		.split('\n');
 	
 	// Load all lines from allMessages.txt and filter out banned words
-	const allMessages = fs.readFileSync('allMessages.txt', 'utf8')
+	let allMessages = fs.readFileSync('allMessages.txt', 'utf8')
 		.split('\n')
-		.filter(m => !bannedWords.some(bw => m.includes(bw)));
+		.filter(m => !bannedWords.includes(m));
+
+	console.log(`Loaded ${allMessages.length} messages.`);
+
+	console.log(`Loaded ${bannedWords.length} banned words.`);
 
 	const channel = client.channels.cache.get(env.SEND_CHANNEL);
 
