@@ -5,12 +5,13 @@ const client = new Client({
 	partials: [Partials.Channel, Partials.Message],
 });
 const fs = require('fs');
+const { parse } = require('path');
 const env = require('dotenv').config().parsed;
 
 client.on("ready", async () => {
 	console.log("Bot is ready!");
 
-	const channelIds = env.COLLECT_CHANNEL.split(',');
+	const channelIds = env.COLLECT_CHANNEL.split(',').map(channelId => parseInt(channelId));
 
 	let allMessages = [];
 
