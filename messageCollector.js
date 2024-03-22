@@ -1,4 +1,3 @@
-const fetchAll = require('discord-fetch-all');
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const client = new Client({
 	intents: Object.values(GatewayIntentBits),
@@ -6,6 +5,22 @@ const client = new Client({
 });
 const fs = require('fs');
 const env = require('dotenv').config().parsed;
+
+async function fetchMessages(channel) {
+	while (true) {
+		const fetchedMessages = await channel.messages.fetch({ 
+			limit: 100, 
+			...(lastID && { before: lastID }) 
+		})
+
+		if (fetchedMessages.size === 0 || messages.length >= env.MESSAGES_PER_CHANNEL) {
+			return messages.reverse().filter(msg => !msg.author.bot);
+		}
+
+		messages = messages.concat(Array.from(fetchedMessages.values()));
+		lastID = fetchedMessages.lastKey();
+	}
+}
 
 client.on("ready", async () => {
 	console.log("Bot is ready!");
@@ -20,12 +35,9 @@ client.on("ready", async () => {
 
 		console.log(`Started collecting messages from #${channel.name} in ${channel.guild.name}. This may take from a few seconds to a few minutes depending on the amount of messages in the channel.`);
 		
-		const allChannelMessages = await fetchAll.messages(channel, {
-			reverseArray: true, // Reverse the returned array
-			userOnly: true, // Only return messages by users
-			botOnly: false, // Only return messages by bots
-			pinnedOnly: false, // Only returned pinned messages
-		});
+		const allChannelMessages = await fetchMessages(channel);
+
+		console.log(`Finished collecting messages from #${channel.name} in ${channel.guild.name}. Found ${allChannelMessages.length} messages.`);
 
 		allMessages = allMessages.concat(allChannelMessages);
 	}
