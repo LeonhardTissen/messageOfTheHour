@@ -7,6 +7,9 @@ const fs = require('fs');
 const env = require('dotenv').config().parsed;
 
 async function fetchMessages(channel) {
+	let lastID = null;
+	let messages = [];
+
 	while (true) {
 		const fetchedMessages = await channel.messages.fetch({ 
 			limit: 100, 
