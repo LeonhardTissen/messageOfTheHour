@@ -50,7 +50,7 @@ client.on("ready", async () => {
 
 	const allMessageContents = allMessages
 		.map(m => m.attachments.size > 0 ? m.content + ' ' + m.attachments.map(a => a.url).join(' ') : m.content)
-		.map(m => m.content.replaceAll('\n', '{NEWLINE}'))
+		.map(m => m.replaceAll('\n', '{NEWLINE}'))
 		.filter(m => m.length > 0);
 	
 	// Put all messages into a txt file
