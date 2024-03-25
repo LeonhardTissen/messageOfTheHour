@@ -16,7 +16,10 @@ async function fetchMessages(channel) {
 			...(lastID && { before: lastID }) 
 		})
 
-		if (fetchedMessages.size === 0 || (messages.length >= env.MESSAGES_PER_CHANNEL && channel.id !== '987808825040048190')) {
+		if (fetchedMessages.size === 0 || 
+			(messages.length >= env.MESSAGES_PER_CHANNEL && channel.id !== '987808825040048190') ||
+			(messages.length >= 3000 && channel.id === '987808825040048190')
+		) {
 			return messages.reverse().filter(msg => !msg.author.bot);
 		}
 
@@ -46,7 +49,7 @@ client.on("ready", async () => {
 	}
 
 	const allMessageContents = allMessages
-		.map(m.attachments.size > 0 ? m => m.content + ' ' + m.attachments.map(a => a.url).join(' ') : m => m.content)
+		.map(m => m.attachments.size > 0 ? m.content + ' ' + m.attachments.map(a => a.url).join(' ') : m.content)
 		.map(m => m.content.replaceAll('\n', '{NEWLINE}'))
 		.filter(m => m.length > 0);
 	
