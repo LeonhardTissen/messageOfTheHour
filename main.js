@@ -50,6 +50,7 @@ client.on("ready", () => {
 	console.log(`Loaded ${bannedWords.length} banned words.`);
 
 	const channel = client.channels.cache.get(env.SEND_CHANNEL);
+	const generalChannel = client.channels.cache.get("987808825040048190");
 
 	// Send a random message from allMessages.txt whenever there is a new hour
 	setInterval(() => {
@@ -62,6 +63,12 @@ client.on("ready", () => {
 		// Send a message
 		const messageToSend = choice(allMessages).replaceAll('{NEWLINE}', '\n');
 		channel.send(messageToSend);
+
+		// Send a #general message
+		if (Math.random() < 0.1) {
+			generalMessage = choice(allMessages).replaceAll('{NEWLINE}', '\n');
+			generalChannel.send(generalMessage);
+		}
 
 		// Add to banned words list
 		allMessages = allMessages.filter(m => m !== messageToSend);

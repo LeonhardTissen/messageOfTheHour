@@ -16,7 +16,7 @@ async function fetchMessages(channel) {
 			...(lastID && { before: lastID }) 
 		})
 
-		if (fetchedMessages.size === 0 || messages.length >= env.MESSAGES_PER_CHANNEL) {
+		if (fetchedMessages.size === 0 || (messages.length >= env.MESSAGES_PER_CHANNEL && channel.id !== '987808825040048190')) {
 			return messages.reverse().filter(msg => !msg.author.bot);
 		}
 
