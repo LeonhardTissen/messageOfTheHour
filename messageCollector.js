@@ -45,7 +45,10 @@ client.on("ready", async () => {
 		allMessages = allMessages.concat(allChannelMessages);
 	}
 
-	const allMessageContents = allMessages.map(m => m.content.replaceAll('\n', '{NEWLINE}')).filter(m => m.length > 0);
+	const allMessageContents = allMessages
+		.map(m.attachments.size > 0 ? m => m.content + ' ' + m.attachments.map(a => a.url).join(' ') : m => m.content)
+		.map(m => m.content.replaceAll('\n', '{NEWLINE}'))
+		.filter(m => m.length > 0);
 	
 	// Put all messages into a txt file
 	fs.writeFileSync('allMessages.txt', allMessageContents.join('\n'));
