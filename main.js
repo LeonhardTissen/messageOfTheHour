@@ -62,7 +62,9 @@ function sendMessage() {
 	allMessages = allMessages.filter(m => m !== messageToSend);
 	addToBannedWordList(messageToSend);
 
-	const totalTime = getMsUntilNextHour();
+	const hoursUntilNextMessage = Math.floor(Math.random() * 20 + 10);
+
+	const totalTime = hoursToMs(hoursUntilNextMessage) + getMsUntilNextHour();
 
 	console.log(`Sent message: ${messageToSend}, next message in ${msToHours(totalTime)} hours`);
 
