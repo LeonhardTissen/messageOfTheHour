@@ -10,51 +10,52 @@ function choice(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
+const bannedWordsFile = 'bannedWords.txt';
+const allMessagesFile = 'allMessages.txt';
+
 // Create bannedWords.txt if it doesn't exist
-if (!fs.existsSync('bannedWords.txt')) {
-	fs.writeFileSync('bannedWords.txt', '');
+if (!fs.existsSync(bannedWordsFile)) {
+	fs.writeFileSync(bannedWordsFile, '');
 }
 
-const bannedWords = fs.readFileSync('bannedWords.txt', 'utf8').split('\n');
+const bannedWords = readTxtEntries(bannedWordsFile);
 
 function addToBannedWordList(word) {
-	console.log('Adding word to banned list:', word);
 	bannedWords.push(word);
-	fs.writeFileSync('bannedWords.txt', bannedWords.join('\n'));
+	fs.writeFileSync(bannedWordsFile, bannedWords.join('\n'));
 }
 
-let lastHourSent = -1;
+function getCurrentHour() {
+	return new Date().getHours();
+}
+
+let lastHourSent = getCurrentHour();
+
+function readTxtEntries(fileName) {
+	return fs.readFileSync(fileName, 'utf8').split('\n');
+}
 
 client.on("ready", () => {
 	console.log("Bot is ready!");
 
-	client.user.setPresence({ 
-		activities: [{ 
-			name: 'moth.Warze.org', 
+	client.user.setPresence({
+		activities: [{
+			name: 'moth.Warze.org',
 			type: ActivityType.Watching,
-		}], 
-		status: 'dnd' 
+		}],
+		status: 'dnd'
 	});
 
-	// Load banned words
-	const bannedWords = fs.readFileSync('bannedWords.txt', 'utf8')
-		.split('\n');
-	
 	// Load all lines from allMessages.txt and filter out banned words
-	let allMessages = fs.readFileSync('allMessages.txt', 'utf8')
-		.split('\n')
-		.filter(m => !bannedWords.includes(m));
+	let allMessages = readTxtEntries(allMessagesFile).filter(m => !bannedWords.includes(m));
 
-	console.log(`Loaded ${allMessages.length} messages.`);
-
-	console.log(`Loaded ${bannedWords.length} banned words.`);
+	console.log(`Loaded ${allMessages.length} messages and ${bannedWords.length} banned words`);
 
 	const channel = client.channels.cache.get(env.SEND_CHANNEL);
 
 	// Send a random message from allMessages.txt whenever there is a new hour
 	setInterval(() => {
-		const date = new Date();
-		const hour = date.getHours();
+		const hour = getCurrentHour();
 
 		// Already sent a message this hour
 		if (hour === lastHourSent) return;

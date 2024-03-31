@@ -6,17 +6,17 @@ const client = new Client({
 const fs = require('fs');
 const env = require('dotenv').config().parsed;
 
-async function fetchMessages(channel) {
+async function fetchMessages(channel, messageLimit) {
 	let lastID = null;
 	let messages = [];
 
 	while (true) {
-		const fetchedMessages = await channel.messages.fetch({ 
-			limit: 100, 
-			...(lastID && { before: lastID }) 
+		const fetchedMessages = await channel.messages.fetch({
+			limit: 100,
+			...(lastID && { before: lastID })
 		})
 
-		if (fetchedMessages.size === 0 || messages.length >= env.MESSAGES_PER_CHANNEL) {
+		if (fetchedMessages.size === 0 || messages.length >= messageLimit) {
 			return messages.reverse().filter(msg => !msg.author.bot);
 		}
 
@@ -28,17 +28,18 @@ async function fetchMessages(channel) {
 client.on("ready", async () => {
 	console.log("Bot is ready!");
 
-	const channelIds = env.COLLECT_CHANNEL.split(',');
+	const channelIds = JSON.parse(fs.readFileSync('collectChannels.json', 'utf8'));
 
 	let allMessages = [];
 
-	for (let channelId of channelIds) {
+	for (let channelId of Object.keys(channelIds)) {
+		const messageLimit = channelIds[channelId];
 
 		const channel = client.channels.cache.get(channelId);
 
 		console.log(`Started collecting messages from #${channel.name} in ${channel.guild.name}. This may take from a few seconds to a few minutes depending on the amount of messages in the channel.`);
-		
-		const allChannelMessages = await fetchMessages(channel);
+
+		const allChannelMessages = await fetchMessages(channel, messageLimit);
 
 		console.log(`Finished collecting messages from #${channel.name} in ${channel.guild.name}. Found ${allChannelMessages.length} messages.`);
 
@@ -46,7 +47,7 @@ client.on("ready", async () => {
 	}
 
 	const allMessageContents = allMessages.map(m => m.content.replaceAll('\n', '{NEWLINE}')).filter(m => m.length > 0);
-	
+
 	// Put all messages into a txt file
 	fs.writeFileSync('allMessages.txt', allMessageContents.join('\n'));
 
