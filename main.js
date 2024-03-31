@@ -25,14 +25,51 @@ function addToBannedWordList(word) {
 	fs.writeFileSync(bannedWordsFile, bannedWords.join('\n'));
 }
 
-function getCurrentHour() {
-	return new Date().getHours();
+function getMsUntilNextHour() {
+	const now = new Date();
+	const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
+	return nextHour - now;
 }
 
-let lastHourSent = getCurrentHour();
+function msToHours(ms) {
+	return ms / 1000 / 60 / 60;
+}
+
+function hoursToMs(hours) {
+	return hours * 60 * 60 * 1000;
+}
 
 function readTxtEntries(fileName) {
 	return fs.readFileSync(fileName, 'utf8').split('\n');
+}
+
+// Load all lines from allMessages.txt and filter out banned words
+let allMessages = readTxtEntries(allMessagesFile).filter(m => !bannedWords.includes(m));
+
+let channel;
+
+function sendMessage() {
+	// Pick a random message to send
+	const messageToSend = choice(allMessages).replaceAll('{NEWLINE}', '\n');
+	console.log(`Sending message: ${messageToSend}`);
+
+	// Send message
+	if (channel) {
+		channel.send(messageToSend);
+	}
+
+	// Add to banned words list
+	allMessages = allMessages.filter(m => m !== messageToSend);
+	addToBannedWordList(messageToSend);
+
+	const hoursUntilNextMessage = Math.floor(Math.random() * 20 + 10);
+
+	const totalTime = hoursToMs(hoursUntilNextMessage) + getMsUntilNextHour();
+
+	console.log(`Sent message: ${messageToSend}, next message in ${msToHours(totalTime)} hours`);
+
+	// Schedule next message
+	setTimeout(sendMessage, totalTime)
 }
 
 client.on("ready", () => {
@@ -46,30 +83,15 @@ client.on("ready", () => {
 		status: 'dnd'
 	});
 
-	// Load all lines from allMessages.txt and filter out banned words
-	let allMessages = readTxtEntries(allMessagesFile).filter(m => !bannedWords.includes(m));
+	console.log(`Loaded ${allMessages.length} messages.`);
 
-	console.log(`Loaded ${allMessages.length} messages and ${bannedWords.length} banned words`);
+	channel = client.channels.cache.get(env.SEND_CHANNEL);
 
-	const channel = client.channels.cache.get(env.SEND_CHANNEL);
+	const msUntilNextHour = getMsUntilNextHour();
 
-	// Send a random message from allMessages.txt whenever there is a new hour
-	setInterval(() => {
-		const hour = getCurrentHour();
-
-		// Already sent a message this hour
-		if (hour === lastHourSent) return;
-
-		// Send a message
-		const messageToSend = choice(allMessages).replaceAll('{NEWLINE}', '\n');
-		channel.send(messageToSend);
-
-		// Add to banned words list
-		allMessages = allMessages.filter(m => m !== messageToSend);
-		addToBannedWordList(messageToSend);
-
-		lastHourSent = hour;
-	}, 1000);
+	// Schedule first message
+	console.log(`Next message in ${msToHours(msUntilNextHour)} hours`);
+	setTimeout(sendMessage, msUntilNextHour);
 });
 
 client.login(env.DISCORD_TOKEN);
